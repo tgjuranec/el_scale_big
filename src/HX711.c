@@ -14,6 +14,7 @@
 #include <io.h>
 #include <sch.h>
 #include <stdio.h>
+#include <deep_sleep.h>
 
 
 
@@ -102,7 +103,7 @@ void hx711_init(CHIP_IOCON_PIO_T sck_port, \
 	io_set_output_state(hc.sck, 0);
 	//set tara
 	hx711_tara_set();
-	LCD1602_print("Weight: 0       ","Std: 0         ");
+	LCD1602_print("Weight: 0       ","W max: 0       ");
 }
 
 
@@ -113,10 +114,10 @@ int32_t hx711_get_weight_oneshot(){
 }
 
 
-void hx711_get_weight(){		//returns weight in tenths of grams
+void hx711_get_weight(){		//returns weight in tenths of kilograms
 	static uint32_t hx711_count;
 	static int32_t hx711_w[16], hx711_sw[16];			//list of weights
-	static int32_t mw_old;
+	static int32_t mw_old,mw_max;
 	int32_t read = (int32_t) hx711_val_to_10g(hx711_read()) - hc.tara;	//read and convert
 	hx711_w[hx711_count & 0xF] = read;				//assign value
 	hx711_sw[hx711_count & 0xF] = read << 8;
@@ -125,11 +126,18 @@ void hx711_get_weight(){		//returns weight in tenths of grams
 		q31_t mw,stdw;
 		arm_mean_q31 (&hx711_w[0], 16, &mw);
 		arm_std_q31(&hx711_sw[0], 16, &stdw);
-		if(/*(stdw == 0) && */(mw_old != mw)){		//lcd will be updated only if there is change in weight
+		if((stdw == 0) && (mw_old != mw)){		//lcd will be updated only if there is change in weight
 			char line1[17], line2[17];
-			sprintf(line1,"Weight: %d.%d",ABS(mw/10)*ABS(mw%10)/(mw%10),ABS(mw%10));
-			sprintf(line2,"Std: %d",stdw);
+			if(mw < 0){
+				sprintf(line1,"Weight: -%d.%d",ABS(mw/10),ABS(mw%10));
+			}
+			else{
+				sprintf(line1,"Weight: %d.%d",mw/10,mw%10);
+			}
+			if(mw > mw_max) mw_max = mw;
+			sprintf(line2,"W max: %d.%d",mw_max/10,mw_max%10);
 			LCD1602_print(line1,line2);
+			sleep_timer_reset(60);
 		}
 		mw_old = mw;
 	}

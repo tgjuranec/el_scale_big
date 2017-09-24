@@ -18,8 +18,9 @@
 #include <io.h>
 #include <cr_section_macros.h>
 #include <data_process.h>
-#include <sleep.h>
+#include <deep_sleep.h>
 #include <sch.h>
+
 
 
 
@@ -73,10 +74,12 @@ int main(void) {
 			IOCON_PIO0_11, \
 			IOCON_PIO0_11, \
 			IOCON_PIO1_6, /*E*/ \
-			IOCON_PIO2_7, \
-			IOCON_PIO2_7);
+			IOCON_PIO0_4, \
+			IOCON_PIO0_5);
+    sleep_timer_init(60);
 	sch_addtask(hx711_get_weight,11,10,1);
 	sch_addtask(LCD1602_exec,2,2,1);
+	sch_addtask(sleep_timer_check,13,2,1);
 	sch_start();
 	while(1){
 		sch_dispatch();

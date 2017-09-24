@@ -50,36 +50,34 @@ static void tmr1_init(){
 	Chip_TIMER_ResetOnMatchDisable(LPC_TIMER32_1,0);
 	Chip_TIMER_StopOnMatchDisable(LPC_TIMER32_1,0);
 	Chip_TIMER_PrescaleSet(LPC_TIMER32_1,presc-1);
+	Chip_TIMER_Enable(LPC_TIMER32_1);
 }
 
 
 
 void tmr1_delay_us(uint32_t us){
+	Chip_TIMER_Reset(LPC_TIMER32_1);
+	Chip_TIMER_Enable(LPC_TIMER32_1);
 	uint32_t sclockmhz = Chip_Clock_GetSystemClockRate()/1000000;							//get system clock 48MHz
 	uint32_t delta = (uint32_t)(sclockmhz*us/(LPC_TIMER32_1->PR+1));		//get delta value of timer to end this function
-	Chip_TIMER_Disable(LPC_TIMER32_1);
-	Chip_TIMER_Reset(LPC_TIMER32_1);
 	Chip_TIMER_SetMatch(LPC_TIMER32_1,0,delta);
-	Chip_TIMER_Enable(LPC_TIMER32_1);
 	while(Chip_TIMER_ReadCount(LPC_TIMER32_1) < LPC_TIMER32_1->MR[0]);
 }
 
 void tmr1_delay_cputicks(uint32_t cputicks){
-	Chip_TIMER_Disable(LPC_TIMER32_1);
 	Chip_TIMER_Reset(LPC_TIMER32_1);
-	Chip_TIMER_SetMatch(LPC_TIMER32_1,0,cputicks);
 	Chip_TIMER_Enable(LPC_TIMER32_1);
+	Chip_TIMER_SetMatch(LPC_TIMER32_1,0,cputicks);
 	while(Chip_TIMER_ReadCount(LPC_TIMER32_1) < LPC_TIMER32_1->MR[0]);
 	return;
 }
 
 void tmr1_timeout_set(uint32_t us){
+	Chip_TIMER_Reset(LPC_TIMER32_1);
+	Chip_TIMER_Enable(LPC_TIMER32_1);
 	uint32_t sclockmhz = Chip_Clock_GetSystemClockRate()/1000000;							//get system clock 48MHz
 	uint32_t delta = (uint32_t)(sclockmhz*us/(LPC_TIMER32_1->PR+1));		//get delta value of timer to end this function
-	Chip_TIMER_Disable(LPC_TIMER32_1);
-	Chip_TIMER_Reset(LPC_TIMER32_1);
 	Chip_TIMER_SetMatch(LPC_TIMER32_1,0,delta);
-	Chip_TIMER_Enable(LPC_TIMER32_1);
 }
 
 uint8_t tmr1_timeout_off(){
@@ -210,7 +208,7 @@ static inline void LCD1602_shift(uint8_t shift){
 }
 
 
-static inline void LCD1602_clrscr(){
+void LCD1602_clrscr(){
 	LCD1602_print_ctrl(LCD_1602_CLEAR_DISPLAY);		//clear display, SET AC to 0x00
 }
 
@@ -221,21 +219,32 @@ static inline void LCD1602_clrscr(){
  * INITS
  */
 
+/*
+ * LED - opposite logic
+ */
 
 void LCD1602_led_on(){
-	io_set_output_state(lc.lcdled,1);		//turn on transistor
+	io_set_output_state(lc.lcdled,0);		//turn on LED
 }
 
+void LCD1602_led_off(){
+	io_set_output_state(lc.lcdled,1);		//turn off LED
+}
 
+/*
+ * LCD power  - opposite logic P-channel mosfet
+ */
 //in order to avoid problems regards voltage levels conversion
 //LCD need to be powered after setting of GPIO connecting pins
 //call this function AFTER all initialization on UC is finished!!!!
-static inline void LCD1602_poweron(){
-	io_set_output_state(lc.lcdpwr,1);		//turn on transistor
+void LCD1602_poweron(){
+	io_set_output_state(lc.lcdpwr,0);		//turn on transistor
 	tmr1_delay_us(20000);		//delay until the supply voltage becomes stable
 }
 
-
+void LCD1602_poweroff(){
+	io_set_output_state(lc.lcdpwr,1);		//turn OFF
+}
 
 static inline void LCD1602_4bit_init(){
 	uint8_t i;

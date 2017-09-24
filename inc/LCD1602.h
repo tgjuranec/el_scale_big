@@ -111,12 +111,16 @@ Read data From RAM - Read data from internal RAM
 extern char lcd_text[2][16];
 extern uint8_t lcd_counter;
 
-
-
 void LCD1602_init(CHIP_IOCON_PIO_T rs, CHIP_IOCON_PIO_T rw, \
 		CHIP_IOCON_PIO_T d7, CHIP_IOCON_PIO_T d6, CHIP_IOCON_PIO_T d5, CHIP_IOCON_PIO_T d4, \
 		CHIP_IOCON_PIO_T d3, CHIP_IOCON_PIO_T d2, CHIP_IOCON_PIO_T d1, CHIP_IOCON_PIO_T d0, \
 		CHIP_IOCON_PIO_T e, CHIP_IOCON_PIO_T lcdpwr, CHIP_IOCON_PIO_T lcdled);
 void LCD1602_exec();
 void LCD1602_print(char *line1, char *line2);
+
+void LCD1602_clrscr();
+void LCD1602_led_off();
+void LCD1602_led_on();
+void LCD1602_poweroff();
+
 #endif /* LCD1602_H_ */

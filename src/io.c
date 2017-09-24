@@ -112,8 +112,11 @@ void io_set_as_output(CHIP_IOCON_PIO_T ioconpin){
 	port = (portpin >> 8) & 0xFF;
 	pin = portpin & 0xFF;
 	if((port >= 4) || (pin >= 12)) return;
-	if(ioconpin != IOCON_PIO0_11)	Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
-	else Chip_IOCON_PinMux(LPC_IOCON, ioconpin, 0, IOCON_FUNC1);
+	if(ioconpin == IOCON_PIO0_11)Chip_IOCON_PinMux(LPC_IOCON, ioconpin, 0, IOCON_FUNC1);
+	else if(ioconpin == IOCON_PIO0_0)Chip_IOCON_PinMux(LPC_IOCON, ioconpin, 0, IOCON_FUNC1);
+	else if(ioconpin == IOCON_PIO0_4)Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_STDI2C_EN, IOCON_FUNC0);
+	else if(ioconpin == IOCON_PIO0_5)Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_STDI2C_EN, IOCON_FUNC0);
+	else Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 	Chip_GPIO_SetPinDIROutput(LPC_GPIO,port,pin);
 }
 

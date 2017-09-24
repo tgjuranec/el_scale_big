@@ -41,36 +41,35 @@ static void tmr_init(){
 	Chip_TIMER_ResetOnMatchDisable(LPC_TIMER32_0,0);
 	Chip_TIMER_StopOnMatchDisable(LPC_TIMER32_0,0);
 	Chip_TIMER_PrescaleSet(LPC_TIMER32_0,presc-1);
+	Chip_TIMER_Enable(LPC_TIMER32_0);
 }
 
 
 
 void tmr_delay_us(uint32_t us){
+	Chip_TIMER_Reset(LPC_TIMER32_0);
+	Chip_TIMER_Enable(LPC_TIMER32_0);
 	uint32_t sclockmhz = Chip_Clock_GetSystemClockRate()/1000000;							//get system clock 48MHz
 	uint32_t delta = (uint32_t)(sclockmhz*us/(LPC_TIMER32_0->PR+1));		//get delta value of timer to end this function
-	Chip_TIMER_Disable(LPC_TIMER32_0);
-	Chip_TIMER_Reset(LPC_TIMER32_0);
 	Chip_TIMER_SetMatch(LPC_TIMER32_0,0,delta);
-	Chip_TIMER_Enable(LPC_TIMER32_0);
 	while(Chip_TIMER_ReadCount(LPC_TIMER32_0) < LPC_TIMER32_0->MR[0]);
 }
 
 void tmr_delay_cputicks(uint32_t cputicks){
-	Chip_TIMER_Disable(LPC_TIMER32_0);
 	Chip_TIMER_Reset(LPC_TIMER32_0);
-	Chip_TIMER_SetMatch(LPC_TIMER32_0,0,cputicks);
 	Chip_TIMER_Enable(LPC_TIMER32_0);
+	Chip_TIMER_SetMatch(LPC_TIMER32_0,0,cputicks);
 	while(Chip_TIMER_ReadCount(LPC_TIMER32_0) < LPC_TIMER32_0->MR[0]);
 	return;
 }
 
 void tmr_timeout_set(uint32_t us){
+	Chip_TIMER_Reset(LPC_TIMER32_0);
+	Chip_TIMER_Enable(LPC_TIMER32_0);
 	uint32_t sclockmhz = Chip_Clock_GetSystemClockRate()/1000000;							//get system clock 48MHz
 	uint32_t delta = (uint32_t)(sclockmhz*us/(LPC_TIMER32_0->PR+1));		//get delta value of timer to end this function
-	Chip_TIMER_Disable(LPC_TIMER32_0);
-	Chip_TIMER_Reset(LPC_TIMER32_0);
 	Chip_TIMER_SetMatch(LPC_TIMER32_0,0,delta);
-	Chip_TIMER_Enable(LPC_TIMER32_0);
+
 }
 
 uint8_t tmr_timeout_off(){
