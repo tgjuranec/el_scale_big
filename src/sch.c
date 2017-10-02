@@ -46,7 +46,7 @@ static void tmr_init(){
 
 
 
-void tmr_delay_us(uint32_t us){
+inline void tmr_delay_us(uint32_t us){
 	Chip_TIMER_Reset(LPC_TIMER32_0);
 	Chip_TIMER_Enable(LPC_TIMER32_0);
 	uint32_t sclockmhz = Chip_Clock_GetSystemClockRate()/1000000;							//get system clock 48MHz
@@ -55,7 +55,7 @@ void tmr_delay_us(uint32_t us){
 	while(Chip_TIMER_ReadCount(LPC_TIMER32_0) < LPC_TIMER32_0->MR[0]);
 }
 
-void tmr_delay_cputicks(uint32_t cputicks){
+inline void tmr_delay_cputicks(uint32_t cputicks){
 	Chip_TIMER_Reset(LPC_TIMER32_0);
 	Chip_TIMER_Enable(LPC_TIMER32_0);
 	Chip_TIMER_SetMatch(LPC_TIMER32_0,0,cputicks);

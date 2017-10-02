@@ -55,7 +55,7 @@ static void tmr1_init(){
 
 
 
-void tmr1_delay_us(uint32_t us){
+static inline void tmr1_delay_us(uint32_t us){
 	Chip_TIMER_Reset(LPC_TIMER32_1);
 	Chip_TIMER_Enable(LPC_TIMER32_1);
 	uint32_t sclockmhz = Chip_Clock_GetSystemClockRate()/1000000;							//get system clock 48MHz
@@ -64,7 +64,7 @@ void tmr1_delay_us(uint32_t us){
 	while(Chip_TIMER_ReadCount(LPC_TIMER32_1) < LPC_TIMER32_1->MR[0]);
 }
 
-void tmr1_delay_cputicks(uint32_t cputicks){
+static inline void tmr1_delay_cputicks(uint32_t cputicks){
 	Chip_TIMER_Reset(LPC_TIMER32_1);
 	Chip_TIMER_Enable(LPC_TIMER32_1);
 	Chip_TIMER_SetMatch(LPC_TIMER32_1,0,cputicks);
@@ -186,7 +186,7 @@ static void LCD1602_print_ctrl(uint8_t c){					//argument is 8-bit number
  * STATIC INLINE functions
  */
 
-static inline void LCD1602_set_DDRAM_address(uint8_t address){
+static void LCD1602_set_DDRAM_address(uint8_t address){
 	uint16_t out;
 	out = LCD_1602_SET_DDRAM | address;
 	LCD1602_print_ctrl(out);
@@ -194,13 +194,13 @@ static inline void LCD1602_set_DDRAM_address(uint8_t address){
 }
 
 
-static inline void LCD1602_return_home(){
+static void LCD1602_return_home(){
 	LCD1602_print_ctrl(LCD_1602_RETURN_HOME);
 	return;
 }
 
 
-static inline void LCD1602_shift(uint8_t shift){
+static void LCD1602_shift(uint8_t shift){
 	uint16_t out;
 	out = LCD_1602_CURSOR_DISPLAY_SHIFT | shift;
 	LCD1602_print_ctrl(out);
@@ -214,10 +214,6 @@ void LCD1602_clrscr(){
 
 
 
-
-/*
- * INITS
- */
 
 /*
  * LED - opposite logic
@@ -244,6 +240,15 @@ void LCD1602_poweron(){
 
 void LCD1602_poweroff(){
 	io_set_output_state(lc.lcdpwr,1);		//turn OFF
+}
+
+void LCD1602_displayoff(){
+	LCD1602_print_ctrl(LCD_1602_DISPLAY_ON_OFF);
+}
+
+
+void LCD1602_displayon(){
+	LCD1602_print_ctrl(LCD_1602_DISPLAY_ON_OFF | LCD_1602_DISPLAY_D);
 }
 
 static inline void LCD1602_4bit_init(){

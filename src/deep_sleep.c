@@ -42,8 +42,8 @@ static void config_ios(void){
 	LPC_IOCON->REG[IOCON_PIO2_8]			= 0xC0;
 	LPC_IOCON->REG[IOCON_PIO2_1]			= 0xC0;
 	LPC_IOCON->REG[IOCON_PIO0_3]			= 0xC0;      // USB VBUS
-	//LPC_IOCON->REG[IOCON_PIO0_4]			= 0xC0;      // I2C_SCL, no pull-up, inactive
-	//LPC_IOCON->REG[IOCON_PIO0_5]			= 0xC0;      // I2C_SDA, no pull-up, inactive
+	LPC_IOCON->REG[IOCON_PIO0_4]			= 0xC0;      // I2C_SCL, no pull-up, inactive
+	LPC_IOCON->REG[IOCON_PIO0_5]			= 0xC0;      // I2C_SDA, no pull-up, inactive
 	LPC_IOCON->REG[IOCON_PIO1_9]			= 0xC0;      // CT16B1_MAT0
 	LPC_IOCON->REG[IOCON_PIO3_4]			= 0xC0;
 
@@ -78,27 +78,33 @@ static void config_ios(void){
 	LPC_IOCON->REG[IOCON_PIO1_6]			= 0xC0;      // UART_RXD/CT32B0_MAT0
 	LPC_IOCON->REG[IOCON_PIO1_7]			= 0xC0;      // UART_TXD/CT32B0_MAT1
 	LPC_IOCON->REG[IOCON_PIO3_3]			= 0xC0;
+/*
+ * INPUT PIN 1_9
+ *
+ * OUTPUT PINS:
+ * PORT0 6,8,11
+ * PORT1 6,7,10
+ * PORT2 7,11
+ */
 
 	/* GPIOs at outputs */
-	LPC_GPIO[0].DIR = ~(1<<0);	//Trigger Pin input only
-	//LPC_GPIO1->DIR = ~(1<<4);	//WAKEUP Pin input only
-	//PIO1_6/RXD is configured as input since the transceiver pin is output.
-	//if PIO1_6/RXD is configured as output, driven low and the transceiver is driving high then extra current
-	//LPC_GPIO[0].DIR = ~((1<<4)|(1<<6));	//WAKEUP Pin and PIO1_6/RXD input only
-	LPC_GPIO[2].DIR = 0xFFFFFFFF;
-	LPC_GPIO[3].DIR = 0xFFFFFFFF;
+	LPC_GPIO[0].DIR = 0xFFE;	//pin 0_0 is only input
+	LPC_GPIO[1].DIR = 0xDFF;	//pin 1_9 is only input
+	LPC_GPIO[2].DIR = 0xFFF;
+	LPC_GPIO[3].DIR = 0xFFF;
 
-	/* GPIO outputs to LOW */
-	LPC_GPIO[0].DATA[0xFFF]  = 0x30;
-	LPC_GPIO[1].DATA[0xFFF]  = 0;
-	LPC_GPIO[2].DATA[0xFFF] = 0;
-	LPC_GPIO[3].DATA[0xFFF]  = 0;
+	/* GPIO outputs to HIGH */			//LCD pins to '0'
+	LPC_GPIO[0].DATA[0xFFF]  = 0x22; //0xFEF; //0x6AF pin 11,8,6,4 //0x020
+	LPC_GPIO[1].DATA[0xFFF]  = 0x0; //0xFFF; //0xF3F pin 6,7,10   //0x0
+	LPC_GPIO[2].DATA[0xFFF] =  0x0; //0xFFF;	//0XB7F pin 7,11    //0x0
+	LPC_GPIO[3].DATA[0xFFF]  = 0x0;
 
 	return;
 }
 
 
 static void deep_sleep_start(void) {
+
 
 	/* Turn off all other peripheral dividers */
 	LPC_SYSCTL->SSP0CLKDIV = 0;
@@ -114,7 +120,6 @@ static void deep_sleep_start(void) {
 								|(1<<3) 	//FLASHREG
 								|(1<<4) 	//FLASHARRAY
 								|(1<<6) 	//GPIO
-								|(1<<12)	//UART
 								|(1<<16)	//IOCON
 								;  
 
@@ -152,7 +157,7 @@ static void deep_sleep_start(void) {
 	while (!(LPC_SYSCTL->MAINCLKUEN & 0x01));
 	
 	/* Make sure only the IRC is running */
-	LPC_SYSCTL->PDRUNCFG = ~((1<<0) | (1<<1) | (1<<2) | (1<<9)) ;
+	LPC_SYSCTL->PDRUNCFG = (~((1<<0) | (1<<1) | (1<<2) | (1<<9) | (1 << 12))) & 0xffff ;
 
 	/* Clear the Deep Sleep Flag */
 	LPC_PMU->PCON |= (1<<8);
@@ -171,9 +176,9 @@ static void deep_sleep_start(void) {
 	NVIC_ClearPendingIRQ(PIO0_0_IRQn);
 	NVIC_EnableIRQ(PIO0_0_IRQn);
 
-				/* Reconfigure the IOs */
-	config_ios();
 
+	/* Reconfigure the IOs */
+	config_ios();
 				/* Enter Deep Sleep mode */
 	__WFI();
 	NVIC_SystemReset();
@@ -194,6 +199,7 @@ void sleep_timer_reset(uint32_t s){
 void sleep_timer_check(){
 	if(tick > deep_sleep_tick){
 		LCD1602_clrscr();
+		LCD1602_displayoff();
 		LCD1602_led_off();
 		LCD1602_poweroff();
 		deep_sleep_start();

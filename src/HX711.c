@@ -135,11 +135,11 @@ void hx711_get_weight(){		//returns weight in tenths of kilograms
 				sprintf(line1,"Weight: %d.%d",mw/10,mw%10);
 			}
 			if(mw > mw_max) mw_max = mw;
-			sprintf(line2,"W max: %d.%d",mw_max/10,mw_max%10);
+			sprintf(line2,"Measuring: OK");
 			LCD1602_print(line1,line2);
-			sleep_timer_reset(60);
+			mw_old = mw;
+			//sleep_timer_reset(60);
 		}
-		mw_old = mw;
 	}
 }
 

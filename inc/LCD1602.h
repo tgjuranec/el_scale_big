@@ -122,5 +122,5 @@ void LCD1602_clrscr();
 void LCD1602_led_off();
 void LCD1602_led_on();
 void LCD1602_poweroff();
-
+void LCD1602_displayoff();
 #endif /* LCD1602_H_ */
