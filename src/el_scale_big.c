@@ -40,13 +40,8 @@ int main(void) {
 	Chip_IOCON_PinMux(LPC_IOCON,IOCON_PIO0_1,0,IOCON_FUNC1);
 
 	sch_init();
-	io_init();
+	tmr_delay_us(50000);
 
-
-	// HX711 PIN CONFIGURATION
-	// clock
-	// data
-	hx711_init(IOCON_PIO0_6, IOCON_PIO1_9);
 
 	// LCD PIN CONFIGURATION
 	//RS
@@ -76,10 +71,19 @@ int main(void) {
 			IOCON_PIO1_6, /*E*/ \
 			IOCON_PIO0_4, \
 			IOCON_PIO0_5);
+
+	// HX711 PIN CONFIGURATION
+	// clock
+	// data
+    //calibration button
+	hx711_init(IOCON_PIO0_6, IOCON_PIO1_9,IOCON_PIO0_2);
     sleep_timer_init(60);
-	sch_addtask(hx711_get_weight,11,10,1);
-	sch_addtask(LCD1602_exec,2,2,1);
-	sch_addtask(sleep_timer_check,13,2,1);
+
+
+	sch_addtask(io_debounce_exec,0,1,1);
+	sch_addtask(hx711_get_weight,99,100,1);
+	sch_addtask(LCD1602_exec,1,10,1);
+	sch_addtask(sleep_timer_check,19,20,1);
 	sch_start();
 	while(1){
 		sch_dispatch();

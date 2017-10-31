@@ -10,7 +10,7 @@
 
 #include <chip.h>
 
-#define TICKRATE_HZ 100
+#define TICKRATE_HZ 1000
 #define MAX_TASKS 16
 
 extern uint32_t tick;

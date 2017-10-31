@@ -14,7 +14,8 @@ extern uint32_t hx711_count;
 #define ABS(x)           (((x) < 0) ? -(x) : (x))
 
 void hx711_init(CHIP_IOCON_PIO_T sck_port, \
-		CHIP_IOCON_PIO_T dt_port);
+		CHIP_IOCON_PIO_T dt_port,\
+		CHIP_IOCON_PIO_T bt_callibration);
 void hx711_get_weight();
 
 

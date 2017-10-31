@@ -266,7 +266,7 @@ static inline void LCD1602_4bit_init(){
 	for(i = 0; i < 3; i++){
 		//transfer
 		STROBE;
-		tmr1_delay_us(10000);
+		tmr1_delay_us(100000);
 	}
 
 	//send 0x02
@@ -277,7 +277,7 @@ static inline void LCD1602_4bit_init(){
 		piocon--;
 	}
 	STROBE;
-	tmr1_delay_us(1000);
+	tmr1_delay_us(10000);
 
 	LCD1602_print_ctrl(LCD_1602_FUNCTION_SET | LCD_1602_N);
 }
