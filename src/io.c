@@ -6,6 +6,21 @@
  */
 
 #include <chip.h>
+#include <io.h>
+
+#define MAX_BUTTONS 12
+#define MAX_DEBOUNCE_COUNT 32
+
+
+typedef struct deb_button_td{
+	CHIP_IOCON_PIO_T iopin;
+	button_state st;
+	int8_t debounce_counter;
+} deb_button;
+
+
+deb_button bt[MAX_BUTTONS];
+uint8_t nactive_buttons;
 
 void io_init(){
 	Chip_GPIO_Init(LPC_GPIO);
@@ -87,8 +102,32 @@ void io_set_as_input(CHIP_IOCON_PIO_T ioconpin){
 	port = (portpin >> 8) & 0xFF;
 	pin = portpin & 0xFF;
 	if((port >= 4) || (pin >= 12)) return;
-	if(ioconpin != IOCON_PIO0_11)	Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
-	else Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+	switch(ioconpin ){
+	case IOCON_PIO0_0:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	case IOCON_PIO0_10:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	case IOCON_PIO0_11:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	case IOCON_PIO1_0:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	case IOCON_PIO1_1:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	case IOCON_PIO1_2:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	case IOCON_PIO1_3:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC1);
+		break;
+	default:
+		Chip_IOCON_PinMux(LPC_IOCON, ioconpin, IOCON_MODE_PULLUP, IOCON_FUNC0);
+		break;
+	}
 	Chip_GPIO_SetPinDIRInput(LPC_GPIO,port,pin);
 }
 
@@ -133,3 +172,68 @@ void io_set_output_state(CHIP_IOCON_PIO_T ioconpin, bool value){
 	return;
 }
 
+void io_debounce_init(CHIP_IOCON_PIO_T *pins ,uint32_t npins){
+	uint32_t i;
+	io_init();
+	for(i = 0; i< npins && i < MAX_BUTTONS ;i++){
+		io_set_as_input(pins[i]);
+		bt[i].iopin = pins[i];
+		bt[i].st = BT_OFF;
+		bt[i].debounce_counter = 0;
+	}
+	if(npins <= MAX_BUTTONS){
+		nactive_buttons = npins;
+	}
+	else {
+		nactive_buttons = MAX_BUTTONS;
+	}
+}
+
+void io_debounce_exec(){
+	uint32_t i;
+	for(i = 0; i< nactive_buttons ;i++){
+		//button is OFF
+		if(bt[i].st == BT_OFF){
+			//button pressed - TRANSITION OFF->ON
+			if(io_get_input_state(bt[i].iopin) == FALSE){
+				bt[i].debounce_counter++;
+				//TRANSITION OFF->ON
+				if(bt[i].debounce_counter >= MAX_DEBOUNCE_COUNT){
+					bt[i].st = BT_ON;
+					bt[i].debounce_counter = MAX_DEBOUNCE_COUNT;
+				}
+			}
+			//button released
+			else{
+				bt[i].debounce_counter = 0;
+			}
+		}
+		//button is ON
+		else{
+			//button pressed
+			if(io_get_input_state(bt[i].iopin) == FALSE){
+				bt[i].debounce_counter = MAX_DEBOUNCE_COUNT;
+			}
+			//button released - TRANSITION ON->OFF
+			else{
+				bt[i].debounce_counter--;
+				//TRANSITION ON->OFF
+				if(bt[i].debounce_counter <= 0){
+					bt[i].st = BT_OFF;
+					bt[i].debounce_counter = 0;
+				}
+			}
+		}
+	}
+}
+
+
+button_state io_button_check(CHIP_IOCON_PIO_T ioconpin){
+	uint32_t i;
+	for(i = 0; i< nactive_buttons; i++){
+		if(bt[i].iopin == ioconpin){
+			return bt[i].st;
+		}
+	}
+	return BT_OFF;
+}
